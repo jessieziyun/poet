@@ -1,4 +1,3 @@
-import fire
 import json
 import os
 import numpy as np
@@ -8,28 +7,26 @@ from poetry_generator import model
 from poetry_generator import sample
 from poetry_generator import encoder
 
-class AI:
+class Generator:
     def generate_poetry(self):
         model_name='poet'
         seed=None
         nsamples=1
         batch_size=1
-        length=50
-        temperature=0.75
+        length=40
+        temperature=1
         top_k=40
-        top_p=0.0
+        top_p=1
 
         self.response = ""
 
-        enc = encoder.get_encoder(model_name)
         cur_path = os.path.dirname(__file__) + "/models" + "/" + model_name
+        enc = encoder.get_encoder(model_name)
         hparams = model.default_hparams()
         with open(cur_path + '/hparams.json') as f:
             hparams.override_from_dict(json.load(f))
 
-        if length is None:
-            length = hparams.n_ctx
-        elif length > hparams.n_ctx:
+        if length > hparams.n_ctx:
             raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
 
         with tf.Session(graph=tf.Graph()) as sess:
@@ -53,8 +50,9 @@ class AI:
                 for i in range(batch_size):
                     generated += batch_size
                     text = enc.decode(out[i])
+                    # print(text)
                     self.response = text
 
         return self.response
 
-ai = AI()
+poet = Generator()
