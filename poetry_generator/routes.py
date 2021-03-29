@@ -10,9 +10,9 @@ import time
 from random import random
 from threading import Thread, Event
 
-#random number Generator Thread
 thread = Thread()
 thread_stop_event = Event()
+poem = ""
 
 @socketio.on('connect')
 def test_connect():
@@ -28,25 +28,28 @@ def readArduino():
         # if decoded_proximity < 100:
         #     text = ai.generate_poetry()
         #     print(text)
-        socketio.emit('arduinoread', {'number': decoded_proximity}, namespace='/arduino')
+        socketio.emit('arduinoread', {'number': decoded_proximity})
         socketio.sleep(1)
 
-@socketio.on('connect', namespace='/arduino')
+@socketio.on('connect')
 def test_connect():
-    # need visibility of the global thread object
     global thread
     print('Client connected')
+    socketio.emit('poem', {'poem': poem})
 
-    #Start the random number generator thread only if the thread has not been started before.
     if not thread.isAlive():
         print("Starting Thread")
         thread = socketio.start_background_task(readArduino)
 
-@socketio.on('buttonclicked', namespace='/arduino')
+@socketio.on('buttonclicked')
 def handle_click(data):
     print("button clicked")
-    text = poet.generate_poetry()
-    socketio.emit('poem', {'poem': text}, namespace='/arduino')
+    socketio.emit('clickconfirmation', "clicked")
+    global poem
+    poem = poet.generate_poetry()
+    print(poem)
+    socketio.emit('poem', {'poem': poem})
+    print("END")
 
 @generator.route('/')
 def index():

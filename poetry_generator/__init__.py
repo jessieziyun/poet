@@ -10,5 +10,5 @@ def create_app(config_file='settings.py'):
     from .routes import generator
     app.register_blueprint(generator)
     
-    socketio.init_app(app)
+    socketio.init_app(app, logger=True, engineio_logger=True)
     return app

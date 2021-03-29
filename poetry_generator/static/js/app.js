@@ -1,22 +1,17 @@
 window.onload = () => {
     
-    console.log("Hello world!")
-    //connect to the socket server.
-    var socket = io.connect('http://' + document.domain + ':' + location.port + '/arduino');
+    var socket = io();
 
-    var p = io.connect('http://' + document.domain + ':' + location.port + '/test');
-
-    //receive details from server
     socket.on('arduinoread', data => {
-        // console.log("Proximity value: " + data.number);
         document.getElementById("arduino").innerHTML = data.number;
     });
 
     socket.on('poem', data => {
         console.log(data);
+        document.getElementById("poem").innerHTML = data.poem;
     });
 
-    socket.on('my response', data => {
+    socket.on('clickconfirmation', data => {
         console.log(data);
     });
 
