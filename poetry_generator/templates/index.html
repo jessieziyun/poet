@@ -14,9 +14,12 @@
 </head>
 
 <body>
-  <p id="arduino" class="text"></p>
-  <p id="poem" class="text"></p>
-  <button id="btn" type="button">Click Me!</button>
+  <div class="container animated">
+    <p id="text"></p>
+  </div>
+  <!-- <p id="poem" class="text"></p> -->
+  <!-- <button id="btn" type="button">Click Me!</button> -->
+  <img id='fullscreen' src="{{ url_for('static', filename='assets/full.png') }}"></img>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 

@@ -1,45 +1,97 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Unicase:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baskervville:ital@1&display=swap');
+
+@font-face {
+    font-family: "Arizona Serif";
+    src: url("ABCArizonaSerif-LightItalic-Trial.woff") format('woff');
+}
 
 html,
 body {
     margin: 0;
     padding: 0;
     overscroll-behavior: none;
-    font-family: 'Cormorant Unicase', serif;
-    color: yellow;
-    background: #30E8BF;
-    background: -webkit-linear-gradient(to right, #FF8235, #30E8BF);
-    background: linear-gradient(to right, #FF8235, #30E8BF);
+    font-family: 'Baskervville', sans-serif;
+    color: hsl(40, 100%, 90%);
+    background: hsl(180, 40%, 50%);
 }
 
 ::-webkit-scrollbar {
     display: none;
 }
 
-.btn {
-    border: none;
-    font-family: 'Cormorant Unicase', serif;
-    background: none;
-    color: yellow;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    padding: 20px;
-    font-size: 16px;
-    font-weight: 100;
+.container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
 }
 
-.btn:hover {
+#text {
+    z-index: 1;
+    filter: blur(1px);
+    font-size: 60pt;
+    line-height: 1.1em;
+    display: flex;
+    margin: auto;
+    align-items: center;
+    justify-content: center;
+    white-space: pre-line;
+}
+
+canvas {
+    z-index: 0;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+#fullscreen {
+    position: fixed;
+    z-index: 1;
+    bottom: 30px;
+    right: 30px;
+    width: 30px;
+}
+
+#fullscreen:hover {
     cursor: pointer;
 }
 
-.btn:focus {
-    outline: none;
-    text-decoration: underline;
+.animated {
+	-webkit-animation-fill-mode: both;
+	animation-fill-mode: both;
+	-webkit-animation-duration: 10s;
+	animation-duration: 10s;
 }
 
-.text {
-    font-size: 72pt;
-    line-height: 1em;
-    padding: 20px;
+@-webkit-keyframes fadeOut {
+	0% {opacity: 1;}
+	100% {opacity: 0; display: none;}
+}
+
+@keyframes fadeOut {
+	0% {opacity: 1;}
+	100% {opacity: 0; display: none;}
+}
+
+.fadeOut {
+	-webkit-animation-name: fadeOut;
+	animation-name: fadeOut;
+}
+
+@-webkit-keyframes fadeIn {
+	0% {opacity: 0;}
+	100% {opacity: 1;}
+}
+
+@keyframes fadeIn {
+	0% {opacity: 0;}
+	100% {opacity: 1;}
+}
+
+.fadeIn {
+	animation-delay: 0.5s;
+	-webkit-animation-name: fadeIn;
+	animation-name: fadeIn;
 }
