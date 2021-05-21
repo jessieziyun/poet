@@ -21,7 +21,7 @@ window.onload = () => {
     var socket = io();
 
     socket.on('arduinoread', data => {
-        // console.log("arduino", data.number);
+        console.log("arduino", data);
     });
 
     // ON RECEPTION OF NEW POEM
@@ -301,3 +301,9 @@ function getRandomInt(min, max) {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+const colours8 = ["#3f8ad4", "#3d38ba", "#1d613d", "#f4b943", "#e1704e", "#cc499c", "#cf94e8"];
+const colours6 = ["#5d94c7", "#3a62bd", "#34604a", "#d6b36d", "#c2704e", "#cf7d83", "#b899c7"];
+const colours4 = ["#77a6d4", "#6879a1", "#50604a", "#d6b97e", "#c69b7e", "deb0af", "#d2c6e7"];
+const colours2 = ["#99abbf", "#818aa1", "#667062", "#ad9e80", "#c69b7e", "#d6bac5", "#c9c3d6"];
+const colours0 = ["#7b8085", "#50535c", "#1e211f", "#5c5649", "#4d453f", "#736472", "#a69bab"];
