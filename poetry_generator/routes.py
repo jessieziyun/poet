@@ -4,6 +4,9 @@ from . import socketio
 import serial
 import csv
 import atexit
+from collections import deque
+import pandas as pd
+from io import StringIO
 
 generator = Blueprint('generator', __name__)
 arduino = serial.Serial('/dev/tty.usbmodem14101', 9600)
@@ -16,22 +19,27 @@ thread_stop_event = Event()
 poem = ""
 last_poem = 0
 
-csvfile = None
-def generateCSV(data):
-    global csvfile
-    if csvfile is None:
-        # Lazily open file on first call
-        csvfile = open('data.csv', 'a')
-        atexit.register(csvfile.close)  # Close cleanly on program exit
-    try:
-        csvwriter = csv.writer(csvfile, delimiter=",")
-        csvwriter.writerow(data)
+class DataLogger:
+    def __init__(self):
+        self.csvfile = open('data.csv', 'a+')
+        self.writer = csv.writer(self.csvfile)
+        self.reader = csv.reader(self.csvfile)
+        print("csv initiated")
+        atexit.register(self.csvfile.close)
+    def writeData(self, data):
+        self.writer.writerow(data)
         print(data)
-    finally:
-        csvfile.flush()  # Match behavior of repeated with/open, force predictable flush
+        self.csvfile.flush()
+    def readData(self):
+        lines = deque(self.csvfile, 2)
+        print(lines)
+        pd.read_csv(StringIO(''.join(lines)), header=None)
+
+
+arduinoCSV = DataLogger()
 
 def readArduino():
-    global poem, last_poem
+    global poem, last_poem, arduinoCSV
     time_elapsed = 0
     print("Reading Arduino serial")
     while not thread_stop_event.isSet():
@@ -51,7 +59,8 @@ def readArduino():
             socketio.emit('poem', {'poem': poem})
         if int(current_time) % 10 == 0:
             socketio.emit('arduinoread', {'humidity': vals[1], 'temperature': vals[2]})
-            generateCSV([vals[0], vals[1], vals[2], vals[3]])
+        arduinoCSV.writeData([vals[0], vals[1], vals[2], vals[3]])
+            # arduinoCSV.readData()
 
 @socketio.on('connect')
 def connect():
