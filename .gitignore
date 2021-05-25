@@ -1,4 +1,7 @@
 __pycache__/
 .DS_Store
-Screenshots/
 *.pyc
+/poetry_generator/models
+.env
+.flaskenv
+*.db

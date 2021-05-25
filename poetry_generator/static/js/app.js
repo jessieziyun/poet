@@ -11,17 +11,18 @@ canvas2.height = h;
 
 let poemContainer = $("#text");
 
-let deg = 1;
+let typePosition = 1;
 
 window.onload = () => {
 
-    // test background with random colours
-    fillGradient(canvas1, ctx1, colours[getRandomInt(0, 10)], colours[getRandomInt(0, 10)], colours[getRandomInt(0, 10)], colours[getRandomInt(0, 10)], colours[getRandomInt(0, 10)]);
+    const socket = io();
 
-    var socket = io();
-
-    socket.on('arduinoread', data => {
-        console.log("arduino", data);
+    socket.on('mood', data => {
+        console.log("mood", data);
+        typePosition = data.interaction;
+        newColourField(data)
+        const fontVariationSettings = "\"wght\" " + data.soil_moisture * 800 + 100;
+        poemContainer.css("font-variation-settings", fontVariationSettings);
     });
 
     // ON RECEPTION OF NEW POEM
@@ -29,7 +30,7 @@ window.onload = () => {
         console.log(data.poem);
         animate("out");
         setTimeout(() => {
-            newPoem(data.poem, deg);
+            newPoem(data.poem, typePosition);
         }, 8000);
     });
 
@@ -294,16 +295,48 @@ function fillGradient(canvas, ctx, col1, col2, col3, col4, col5) {
     }
 }
 
-const colours = ["#000000", "#5c8e5e", "#b8e2c3", "#fff930", "#ffffff", "#fff930", "#ff9077", "#779077", "#d06b44", "#dd95c3", "#4d6249"]
-
 function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const colours8 = ["#3f8ad4", "#3d38ba", "#1d613d", "#f4b943", "#e1704e", "#cc499c", "#cf94e8"];
-const colours6 = ["#5d94c7", "#3a62bd", "#34604a", "#d6b36d", "#c2704e", "#cf7d83", "#b899c7"];
-const colours4 = ["#77a6d4", "#6879a1", "#50604a", "#d6b97e", "#c69b7e", "deb0af", "#d2c6e7"];
-const colours2 = ["#99abbf", "#818aa1", "#667062", "#ad9e80", "#c69b7e", "#d6bac5", "#c9c3d6"];
-const colours0 = ["#7b8085", "#50535c", "#1e211f", "#5c5649", "#4d453f", "#736472", "#a69bab"];
+const colours = {
+    positive: ["#3f8ad4", "#3d38ba", "#1d613d", "#f4b943", "#e1704e", "#cc499c", "#cf94e8"],
+    somewhatpositive: ["#5d94c7", "#3a62bd", "#34604a", "#d6b36d", "#c2704e", "#cf7d83", "#b899c7"],
+    neutral: ["#77a6d4", "#6879a1", "#50604a", "#d6b97e", "#c69b7e", "deb0af", "#d2c6e7"],
+    somewhatnegative: ["#99abbf", "#818aa1", "#667062", "#ad9e80", "#c69b7e", "#d6bac5", "#c9c3d6"],
+    negative: ["#7b8085", "#50535c", "#1e211f", "#5c5649", "#4d453f", "#736472", "#a69bab"]
+}
+
+function getColour(degree) {
+    const index = getRandomInt(0, 6);
+    if (degree >= 0.8) {
+       return colours.positive[index];
+    } else if (degree >= 0.6 && degree < 0.8) {
+        return colours.somewhatpositive[index];
+    } else if (degree >= 0.4 && degree < 0.6) {
+        return colours.neutral[index];
+    } else if (degree >= 0.2 && degree < 0.4) {
+        return colours.somewhatnegative[index];
+    } else if (degree < 0.2) {
+        return colours.negative[index];
+    }
+}
+
+function newColourField(data) {
+    
+    const humidity = data.humidity;
+    const temperature = data.temperature;
+    const luminosity = data.luminosity;
+
+    if ($("#canvas1").css("opacity") == 1) {
+        fillGradient(canvas2, ctx2, getColour(humidity), getColour(luminosity), getColour(humidity), getColour(temperature), getColour(luminosity));
+        $("#canvas1").fadeTo(10000, 0, "linear");
+        console.log("canvas2")
+    } else if ($("#canvas1").css("opacity") == 0) {
+        fillGradient(canvas1, ctx1, getColour(humidity), getColour(luminosity), getColour(humidity), getColour(temperature), getColour(luminosity));
+        $("#canvas1").fadeTo(10000, 1, "linear");
+        console.log("canvas1")
+    }
+}

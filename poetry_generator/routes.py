@@ -1,12 +1,8 @@
 from flask import Blueprint, render_template
 from .generator import poet
+from .data import DataLog
 from . import socketio
 import serial
-import csv
-import atexit
-from collections import deque
-import pandas as pd
-from io import StringIO
 
 generator = Blueprint('generator', __name__)
 arduino = serial.Serial('/dev/tty.usbmodem14101', 9600)
@@ -19,61 +15,45 @@ thread_stop_event = Event()
 poem = ""
 last_poem = 0
 
-class DataLogger:
-    def __init__(self):
-        self.csvfile = open('data.csv', 'a+')
-        self.writer = csv.writer(self.csvfile)
-        self.reader = csv.reader(self.csvfile)
-        print("csv initiated")
-        atexit.register(self.csvfile.close)
-    def writeData(self, data):
-        self.writer.writerow(data)
-        print(data)
-        self.csvfile.flush()
-    def readData(self):
-        lines = deque(self.csvfile, 2)
-        print(lines)
-        pd.read_csv(StringIO(''.join(lines)), header=None)
-
-
-arduinoCSV = DataLogger()
+database = DataLog()
 
 def readArduino():
-    global poem, last_poem, arduinoCSV
+    global poem, last_poem, database
     time_elapsed = 0
     print("Reading Arduino serial")
     while not thread_stop_event.isSet():
         datastream = arduino.readline()
         datastring = datastream[0:len(datastream)-2].decode("utf-8")
         vals = datastring.split()
-        # 0: soil moisture, 1: humidity, 2: temperature, 3: ecg
         current_time = time.time()
         time_elapsed = current_time - last_poem
-        if int(vals[3]) < 800 and time_elapsed > 70:
-            print("Generating poem...")
-            poem = poet.generate_poetry(1) # val[0] / 100 or something
-            print("=" * 20 + " START POEM " + "=" * 20)
-            print(poem)
-            print("=" * 20 + " END POEM " + "=" * 20)
-            last_poem = time.time()
-            socketio.emit('poem', {'poem': poem})
-        if int(current_time) % 10 == 0:
-            socketio.emit('arduinoread', {'humidity': vals[1], 'temperature': vals[2]})
-        arduinoCSV.writeData([vals[0], vals[1], vals[2], vals[3]])
-            # arduinoCSV.readData()
+        if int(vals[4]) > 600 and time_elapsed > 120:
+            mood = database.getMood()
+            if mood > 0.5:
+                print("Generating poem with temperature {}...".format(mood))
+                poem = poet.generate_poetry(mood)
+                print("=" * 20 + " START POEM " + "=" * 20)
+                print(poem)
+                print("=" * 20 + " END POEM " + "=" * 20)
+                database.logInteraction(current_time)
+                last_poem = time.time()
+                socketio.emit('poem', {'poem': poem})
+        if int(current_time) % 60 == 0:
+            humidity, temperature = database.getHumidityAndTemperature()
+            socketio.emit('mood', {'soil_moisture': database.getSoil(), 'humidity': humidity, 'temperature': temperature, 'luminosity': database.getLuminosity(), 'interaction': database.getInteraction()})
+        database.logData(current_time, vals)
+        socketio.sleep(1)
 
 @socketio.on('connect')
-def connect():
-    global thread, poem
+def test_connect():
+    global thread, poem, database
     print('Client connected')
     socketio.emit('poem', {'poem': poem})
+    humidity, temperature = database.getHumidityAndTemperature()
+    socketio.emit('arduinoread', {'soil_moisture': database.getSoil(), 'humidity': humidity, 'temperature': temperature, 'luminosity': database.getLuminosity(), 'interaction': database.getInteraction()})
     if not thread.isAlive():
         print("Starting Thread")
         thread = socketio.start_background_task(readArduino)
-
-@socketio.on('disconnect')
-def disconnect():
-    print('Client disconnected')
 
 @generator.route('/')
 def index():

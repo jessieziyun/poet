@@ -1,2 +1,0 @@
-FLASK_APP=poetry_generator
-FLASK_ENV=development
